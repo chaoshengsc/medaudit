@@ -2,6 +2,8 @@
 
 **Learn to explain what a medical-image classifier's results show — and what they don't.**
 
+[![Python CI](https://github.com/sunce764/medaudit/actions/workflows/python.yml/badge.svg)](https://github.com/sunce764/medaudit/actions/workflows/python.yml)
+
 A hands-on reliability tutorial for the **MICCAI Educational Challenge 2026**,
 by Chao Sheng, with **MedAudit** as its companion Python toolkit.
 
@@ -94,6 +96,8 @@ python -m pip check
 ```
 
 The tests cover metrics, splits, manifests, probes, leakage and report assembly.
+GitHub Actions runs these tests and the synthetic tutorial smoke checks on
+Python 3.9–3.14; it does not download medical data or model weights.
 Passing synthetic tests does not establish performance on medical data.
 See the [local verification record](docs/READER-VERIFICATION.md) for the tested
 versions and scope; the package's supported dependency ranges are not a lockfile.

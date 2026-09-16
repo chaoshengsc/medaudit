@@ -1,0 +1,111 @@
+name: Python CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install ".[dev]"
+          python -m pip check
+
+      - name: Verify installed import outside the source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          source_root="$(pwd -P)"
+          outside="$(mktemp -d)"
+          (
+            cd "$outside"
+            SOURCE_ROOT="$source_root" python - <<'PY'
+          import os
+          from pathlib import Path
+
+          import medaudit
+
+          module_path = Path(medaudit.__file__).resolve()
+          source_root = Path(os.environ["SOURCE_ROOT"]).resolve()
+          if source_root == module_path or source_root in module_path.parents:
+              raise SystemExit(f"medaudit imported from source tree: {module_path}")
+          print(f"installed medaudit import: {module_path}")
+          PY
+          )
+
+      - name: Run unit tests
+        run: python -m pytest tests -q
+
+      - name: Run and check synthetic examples
+        shell: bash
+        run: |
+          set -euo pipefail
+          smoke_dir="$(mktemp -d)"
+
+          python tutorial/make_demo.py > "$smoke_dir/make-demo.txt"
+          medaudit audit \
+            --config tutorial/demo/audit.json \
+            --out "$smoke_dir/c-report.txt" \
+            > "$smoke_dir/c-stdout.txt"
+          medaudit audit \
+            --config tutorial/demo/leaked.json \
+            --out "$smoke_dir/d-report.txt" \
+            > "$smoke_dir/d-stdout.txt"
+          python tutorial/worked_examples.py > "$smoke_dir/worked.txt"
+
+          python scripts/ci_smoke.py \
+            --make-demo-output "$smoke_dir/make-demo.txt" \
+            --clean-report "$smoke_dir/c-report.txt" \
+            --leaked-report "$smoke_dir/d-report.txt" \
+            --worked-output "$smoke_dir/worked.txt"
+
+          python - "$smoke_dir/d-report.txt" "$smoke_dir/d-report-tampered.txt" <<'PY'
+          from pathlib import Path
+          import sys
+
+          source = Path(sys.argv[1]).read_text(encoding="utf-8")
+          tampered = source.replace("-> GROUP LEAKAGE:", "-> GROUP CLEAN:", 1)
+          if tampered == source:
+              raise SystemExit("known-bad setup could not find the leakage verdict")
+          Path(sys.argv[2]).write_text(tampered, encoding="utf-8")
+          PY
+
+          if python scripts/ci_smoke.py \
+            --make-demo-output "$smoke_dir/make-demo.txt" \
+            --clean-report "$smoke_dir/c-report.txt" \
+            --leaked-report "$smoke_dir/d-report-tampered.txt" \
+            --worked-output "$smoke_dir/worked.txt" \
+            2> "$smoke_dir/known-bad.stderr"; then
+            echo "smoke checker accepted a report with its leakage verdict removed" >&2
+            exit 1
+          fi
+          grep -F \
+            "missing '-> GROUP LEAKAGE: 1 group(s) span multiple splits'" \
+            "$smoke_dir/known-bad.stderr"
+          echo "known-bad smoke report rejected as expected"
