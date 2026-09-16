@@ -91,3 +91,6 @@ tutorial/demo/
 # cohort, contain no patient data, and must ship with the tutorial.
 !tutorial/assets/
 !tutorial/assets/*.png
+
+# Only the approved public MEC 2026 promotional film; production material stays private.
+!docs/media/from-pixels-to-patients-mec2026.mp4

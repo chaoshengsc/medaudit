@@ -10,6 +10,14 @@ by Chao Sheng, with **MedAudit** as its companion Python toolkit.
 **[Read the tutorial →](tutorial/from-pixels-to-patients.md)** ·
 **[Run and interpret the examples →](tutorial/RUNNING.md)**
 
+## One-minute promotional video
+
+[Watch online](https://drive.google.com/file/d/1c2gTuBD3pS-hVzmSJPsFe1aiS6R1MEVj/view) ·
+[Video in this repository](docs/media/from-pixels-to-patients-mec2026.mp4) ·
+[Download MP4](https://raw.githubusercontent.com/sunce764/medaudit/main/docs/media/from-pixels-to-patients-mec2026.mp4)
+
+English · 60 seconds · 1080p · 7 MB. The original submitted film, unchanged.
+
 ## Who this is for
 
 Students and researchers entering medical imaging who know basic Python and
