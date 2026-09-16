@@ -16,7 +16,7 @@ by Chao Sheng, with **MedAudit** as its companion Python toolkit.
 [Video in this repository](docs/media/from-pixels-to-patients-mec2026.mp4) ·
 [Download MP4](https://raw.githubusercontent.com/sunce764/medaudit/main/docs/media/from-pixels-to-patients-mec2026.mp4)
 
-English · 60 seconds · 1080p · 7 MB. The original submitted film, unchanged.
+English · 60 seconds · 1080p · 7 MB.
 
 ## Who this is for
 
