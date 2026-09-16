@@ -121,11 +121,11 @@ def run_audit_arrays(manifest, features, config=None):
             "medaudit generated this split itself and made it group-clean by "
             "construction, so checking it would prove nothing about your pipeline; "
             "supply a 'split' column to audit your own assignment")
-        if leak_report["verdict"] == "CLEAN":
+        if leak_report["verdict"] == "NO FLAGS":
             leak_report["detail"] = (
                 "group leakage NOT ASSESSED (" + leak_report["group_note"] + "). No "
                 f"cross-split pair at cosine ≥ {leak_report['threshold']}. Note this "
-                "only rules out near-duplicates the embedding can see")
+                "only reports no flags from this embedding-based screen")
 
     return {
         "n_rows": len(labels),

@@ -2,7 +2,7 @@
 
 Three regimes, each with a designed-in answer:
   A. attribute genuinely encoded (and independent of class) -> decodable overall
-     AND within every class -> verdict SHORTCUT ENCODED.
+     AND within every class -> verdict ATTRIBUTE ENCODED.
   B. attribute is pure noise vs the features -> near chance -> NOT DECODABLE.
   C. features encode only the CLASS, and the attribute is merely class-collinear
      -> decodable overall, but NOT within a fixed class -> verdict AMBIGUOUS.
@@ -55,7 +55,7 @@ def test_encoded_shortcut():
     for cname, r in rep["within_class"].items():
         assert "skipped" not in r, (cname, r)
         assert r["auroc"] > 0.75, (cname, r)
-    assert rep["verdict"] == "SHORTCUT ENCODED", rep["verdict"]
+    assert rep["verdict"] == "ATTRIBUTE ENCODED", rep["verdict"]
     print("  encoded_shortcut        OK  (overall AUROC "
           f"{rep['overall']['auroc']:.3f})")
 
@@ -123,7 +123,7 @@ def test_l2_grid_and_partition_repeats_reported():
 
 
 def test_mixed_verdict_requires_all_classes():
-    """Mode encoded in ONE class only must NOT be promoted to SHORTCUT ENCODED —
+    """Mode encoded in ONE class only must NOT be promoted to ATTRIBUTE ENCODED —
     with several classes probed, one hit is what chance produces."""
     def cls(rng):  return int(rng.random() < 0.5)
     def att(rng, c): return int(rng.random() < 0.5)

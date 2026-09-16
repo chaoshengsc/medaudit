@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     print("\n" + "=" * 72)
     print("B. same cohort, features ALSO encode MODE  (beta=1.2)")
-    print("   the ONLY change from A. expect: SHORTCUT ENCODED")
+    print("   the ONLY change from A. expect: ATTRIBUTE ENCODED")
     print("=" * 72)
     print(probe.format_report(case_b_encoded()))
 

@@ -25,7 +25,7 @@ reference, not the verdict threshold. See tutorial §2 for the full explanation.
 **Pause:** B decodes mode within both classes. Did the diagnostic classifier use
 that information?
 
-**Answer:** this test does not establish that. `SHORTCUT ENCODED` means information
+**Answer:** this test does not establish that. `ATTRIBUTE ENCODED` means information
 is available as a potential shortcut. It is not proof of reliance, harm, or
 clinical suitability. A's `AMBIGUOUS` result is also not proof of safety.
 
@@ -94,9 +94,11 @@ The audit fits separate metadata probes on the features you supply.
 
 Create a local CSV with `path,label,group,attr_mode` and, to assess your real
 split, `split`. Each row corresponds to one row of a finite `(N, D)` NumPy
-feature matrix. `group` must represent the patient/case clustering appropriate
-to your data. Preserve row order; matching row counts alone cannot detect a
-permutation. Metadata probes support binary and multi-class attributes. For
+feature matrix. `group` should represent the patient/case clustering appropriate
+to your data. The API permits omitting it, but then every row is treated as its
+own group and the audit cannot provide patient-level separation assurance.
+Preserve row order; matching row counts alone cannot detect a permutation.
+Metadata probes support binary and multi-class attributes. For
 multi-class attributes, the point estimate is the macro-average of the evaluable
 one-vs-rest AUROCs. The displayed interval is the widest individual one-vs-rest
 confidence interval, **not a confidence interval for the macro-AUROC**.

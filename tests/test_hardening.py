@@ -28,9 +28,9 @@ def test_single_class_probe_not_overclaimed():
     rep = probe.probe_report(np.array(feats), np.array(mode), np.array(labels),
                              np.array(groups), attr_name="mode", min_per_class=40)
     assert rep["within_class"] == {}, rep["within_class"]   # no within-class ran
-    assert rep["verdict"] != "SHORTCUT ENCODED", rep["verdict"]
+    assert rep["verdict"] != "ATTRIBUTE ENCODED", rep["verdict"]
     assert rep["verdict"] == "DECODABLE", rep               # decodable, collinearity unknown
-    print("  [1] single-class -> DECODABLE, not SHORTCUT ENCODED   OK")
+    print("  [1] single-class -> DECODABLE, not ATTRIBUTE ENCODED   OK")
 
 
 # --- [2] blank group cell is an error, not a silent singleton ------------------ #

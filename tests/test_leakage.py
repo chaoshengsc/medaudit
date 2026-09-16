@@ -1,8 +1,8 @@
 """Tests for the leakage audit, on synthetic embeddings with a known answer.
 
-  A. clean random embeddings, group-clean split -> CLEAN.
+  A. clean random embeddings, group-clean split -> NO FLAGS.
   B. a test embedding copied from a train embedding (+tiny noise) -> the pair is
-     found -> NEAR-DUPLICATES.
+     found -> POTENTIAL NEAR-DUPLICATES.
   C. one group placed in two splits -> GROUP LEAKAGE (and it takes precedence).
 """
 import numpy as np
@@ -28,7 +28,7 @@ def test_clean():
     rep = leakage.leakage_report(feats, splits, groups, threshold=0.90)
     assert rep["n_group_leak"] == 0, rep["group_leak"]
     assert rep["n_near_dup"] == 0, rep["near_dup"][:3]
-    assert rep["verdict"] == "CLEAN", rep
+    assert rep["verdict"] == "NO FLAGS", rep
     print("  clean            OK")
 
 
@@ -44,7 +44,7 @@ def test_near_duplicate_found():
         feats[j] = feats[i] + rng.normal(0, 1e-3, size=64)
         planted.append((i, j))
     rep = leakage.leakage_report(feats, splits, groups, threshold=0.90)
-    assert rep["verdict"] == "NEAR-DUPLICATES", rep["verdict"]
+    assert rep["verdict"] == "POTENTIAL NEAR-DUPLICATES", rep["verdict"]
     assert rep["n_near_dup"] >= 3, rep["n_near_dup"]
     found = {tuple(sorted((i, j))) for i, j, _ in rep["near_dup"]}
     for i, j in planted:

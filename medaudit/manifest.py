@@ -1,8 +1,9 @@
 """The audit manifest: a CSV describing the dataset to audit.
 
 Required columns: ``path``, ``label``.
-Optional: ``group`` (patient/subject/case id — for leakage-safe splits and
-cluster bootstrap; defaults to the row index = no grouping), and any number of
+Optional: ``group`` (patient/subject/case id — for patient-aware splitting and
+cluster bootstrap; without it, each row is treated as its own group, so the
+audit cannot provide patient-level separation assurance), and any number of
 ``attr_*`` columns holding acquisition/metadata attributes (imaging mode,
 scanner, site, stain, …) that the shortcut probe can test for.
 """
@@ -52,7 +53,8 @@ class Manifest:
             raise ValueError(
                 f"'group' column present but blank in {len(blanks)} row(s) "
                 f"(e.g. rows {blanks[:5]}); fill every group id or drop the column "
-                f"entirely to opt out of grouping — blanks are not silently ungrouped")
+                f"to treat each row independently — this removes patient-level "
+                f"separation assurance; blanks are not silently ungrouped")
         return np.array([r["group"] for r in self.rows])
 
     def attribute(self, name):

@@ -44,13 +44,13 @@ def test_run_audit_arrays():
     assert rep["n_rows"] == len(rows)
     assert sum(rep["split_sizes"].values()) == len(rows)
     # mode is encoded -> shortcut probe should catch it
-    assert rep["probe"]["mode"]["verdict"] == "SHORTCUT ENCODED", rep["probe"]["mode"]
+    assert rep["probe"]["mode"]["verdict"] == "ATTRIBUTE ENCODED", rep["probe"]["mode"]
     # clean group split + varied features -> no leakage
-    assert rep["leakage"]["verdict"] == "CLEAN", rep["leakage"]
+    assert rep["leakage"]["verdict"] == "NO FLAGS", rep["leakage"]
     # report renders without error
     text = render_report(rep)
     assert "SHORTCUT PROBE" in text and "LEAKAGE" in text
-    print("  run_audit_arrays  OK  (mode -> SHORTCUT ENCODED, split CLEAN)")
+    print("  run_audit_arrays  OK  (mode -> ATTRIBUTE ENCODED, split NO FLAGS)")
 
 
 def test_default_attributes_probes_all_attr_cols():
@@ -81,8 +81,8 @@ def test_file_roundtrip():
     assert len(man) == len(rows)
 
     rep = run_audit(cfg_path)
-    assert rep["probe"]["mode"]["verdict"] == "SHORTCUT ENCODED", rep["probe"]["mode"]
-    assert rep["leakage"]["verdict"] == "CLEAN", rep["leakage"]
+    assert rep["probe"]["mode"]["verdict"] == "ATTRIBUTE ENCODED", rep["probe"]["mode"]
+    assert rep["leakage"]["verdict"] == "NO FLAGS", rep["leakage"]
     print("  file_roundtrip    OK  (loaded CSV+npy from disk, ran end-to-end)")
 
 

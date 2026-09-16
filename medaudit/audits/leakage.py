@@ -1,6 +1,6 @@
 """Leakage audit — is train/test independence actually holding?
 
-Two failure modes, both of which silently inflate reported performance:
+Two failure modes that can bias reported performance:
 
   * **group leakage** — the same patient/subject/case has rows in more than one
     split. Cheap to check exactly from ids; the split tools already prevent it,
@@ -95,9 +95,10 @@ def leakage_report(features, split_labels, groups=None, *, threshold=0.90,
     split_labels = np.asarray(split_labels)
     n_rows = len(split_labels)
 
-    # group leakage is only meaningfully assessed if real group ids were supplied
-    # (present, and not all-unique — all-unique means there is no grouping to check).
-    group_assessed = (groups is not None
+    # Group overlap needs repeated patient/case IDs. Unique row IDs carry no
+    # patient-level assurance, but are distinct from omitted IDs in the report.
+    groups_supplied = groups is not None
+    group_assessed = (groups_supplied
                       and len(np.unique(np.asarray(groups))) < n_rows)
     gl = group_leakage(groups, split_labels) if group_assessed else {}
 
@@ -113,18 +114,25 @@ def leakage_report(features, split_labels, groups=None, *, threshold=0.90,
                   f"{list(gl)[:3]}) — fix the split before trusting any metric")
     elif n_total:
         cap = f"showing worst {len(shown)} of {n_total}; " if n_total > len(shown) else ""
-        verdict = "NEAR-DUPLICATES"
+        verdict = "POTENTIAL NEAR-DUPLICATES"
         detail = (f"{n_total} cross-split pair(s) at cosine ≥ {threshold} "
                   f"({cap}worst {all_pairs[0][2]:.3f}) — eyeball them; if genuinely "
-                  "the same image, they inflate the test score")
+                  "the same image, they can bias the test score")
     else:
-        verdict = "CLEAN"
-        ga = ("no group leakage" if group_assessed
-              else "group leakage NOT ASSESSED (no group ids supplied to this check)")
+        verdict = "NO FLAGS"
+        if group_assessed:
+            ga = "no group overlap detected among the supplied repeated IDs"
+        elif groups_supplied:
+            ga = ("group leakage NOT ASSESSED (supplied group IDs are all unique; "
+                  "they provide no patient-level separation check)")
+        else:
+            ga = ("group leakage NOT ASSESSED (no group IDs supplied; "
+                  "patient-level separation cannot be assessed)")
         detail = (f"{ga}; no cross-split pair at cosine ≥ {threshold}. Note this "
-                  "only rules out near-duplicates the embedding can see")
+                  "only reports no flags from this embedding-based screen")
 
     return {"group_leak": gl, "n_group_leak": len(gl), "group_assessed": group_assessed,
+            "groups_supplied": groups_supplied,
             "near_dup": shown, "n_near_dup": n_total, "n_near_dup_shown": len(shown),
             "threshold": threshold, "verdict": verdict, "detail": detail}
 
@@ -135,11 +143,13 @@ def format_report(rep):
     if rep.get("group_assessed", True):
         lines.append(f"  group leakage   {rep['n_group_leak']} group(s)")
     else:
-        # group_note lets a caller state the REAL reason. The default is only
-        # true when no ids reached this function; an orchestrator that withheld
-        # them must say so itself rather than let this stand as the explanation.
+        # A caller can explain why its group check was not assessed.
+        default_note = ("supplied group IDs are all unique; they provide no "
+                        "patient-level separation check"
+                        if rep.get("groups_supplied") else
+                        "no group IDs supplied; patient-level separation cannot be assessed")
         lines.append("  group leakage   NOT ASSESSED — " +
-                     rep.get("group_note", "no group ids supplied to this check"))
+                     rep.get("group_note", default_note))
     for g, s in list(rep["group_leak"].items())[:5]:
         lines.append(f"    group {g!r:>12} in splits {s}")
     total = rep["n_near_dup"]

@@ -7,14 +7,14 @@ from pathlib import Path
 EXPECTED = {
     "make-demo-output": (
         "-> AMBIGUOUS:",
-        "-> SHORTCUT ENCODED:",
+        "-> ATTRIBUTE ENCODED:",
         "group leakage   NOT ASSESSED",
         "-> GROUP LEAKAGE:",
     ),
     "clean-report": (
-        "-> SHORTCUT ENCODED:",
+        "-> ATTRIBUTE ENCODED:",
         "group leakage   NOT ASSESSED",
-        "-> CLEAN: group leakage NOT ASSESSED",
+        "-> NO FLAGS: group leakage NOT ASSESSED",
     ),
     "leaked-report": (
         "-> GROUP LEAKAGE: 1 group(s) span multiple splits",

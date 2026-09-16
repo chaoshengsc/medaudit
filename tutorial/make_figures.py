@@ -124,8 +124,8 @@ def fig_probe():
                 rep["within_class"]["malignant"]]
 
     fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.1), sharey=True)
-    panels = ((axes[0], a, "a", "features encode only the class"),
-              (axes[1], b, "b", "features also encode mode"))
+    panels = ((axes[0], a, "a", "synthetic: class signal only"),
+              (axes[1], b, "b", "synthetic: added mode signal"))
     for ax, rep, letter, descr in panels:
         x = np.arange(3)
         ax.axhline(0.60, color=RULE, lw=0.9, ls=(0, (5, 3)), zorder=0)
@@ -152,7 +152,7 @@ def fig_probe():
     # (every point there sits above 0.71), so long labels can go there without
     # crossing any error bar — in panel (a) they would run through the benign /
     # malignant whiskers, which both reach ~0.62.
-    axes[1].annotate("0.60 decision line", (-0.45, 0.618), ha="left",
+    axes[1].annotate("0.60 heuristic margin", (-0.45, 0.618), ha="left",
                      fontsize=6.8, color=RULE)
     axes[1].annotate("chance", (-0.45, 0.515), ha="left",
                      fontsize=6.8, color="#9a9a9a")
@@ -219,7 +219,7 @@ def fig_calibration():
         axr.plot(fpr, tpr, ls, color=c, lw=1.7, label=f"{lab}  (AUROC {av:.2f})")
     axr.text(-0.02, 1.06, "(a)", transform=axr.transAxes, fontsize=9.5,
              fontweight="bold", va="bottom", color=INK)
-    axr.set_title("discrimination transfers", loc="left", x=0.08, pad=6,
+    axr.set_title("Similar discrimination", loc="left", x=0.08, pad=6,
                   fontsize=8, color=INK)
     axr.set_xlabel("false-positive rate")
     axr.set_ylabel("true-positive rate")
@@ -235,12 +235,12 @@ def fig_calibration():
         axc.plot(xs, ys, mk + "-", color=c, lw=1.4, ms=4, mew=0, label=lab)
     axc.text(-0.02, 1.06, "(b)", transform=axc.transAxes, fontsize=9.5,
              fontweight="bold", va="bottom", color=INK)
-    axc.set_title("calibration does not", loc="left", x=0.08, pad=6,
+    axc.set_title("Different calibration", loc="left", x=0.08, pad=6,
                   fontsize=8, color=INK)
     axc.annotate("over-confident:\nscore > observed", (0.55, 0.20),
                  fontsize=6.8, color=EXT, ha="left")
     axc.set_xlabel("mean predicted probability")
-    axc.set_ylabel("observed frequency")
+    axc.set_ylabel("observed frequency (synthetic)")
     axc.set_xlim(-0.02, 1.02); axc.set_ylim(-0.02, 1.02)
     axc.legend(frameon=False, loc="upper left", handlelength=1.6)
     _spare(axc)
@@ -255,7 +255,7 @@ def fig_calibration():
     p0 = axc.transData.transform((0.0, 0.0))
     p1 = axc.transData.transform((1.0, 1.0))
     diag_deg = float(np.degrees(np.arctan2(p1[1] - p0[1], p1[0] - p0[0])))
-    axc.annotate("perfect calibration", (0.27, 0.40), rotation=diag_deg,
+    axc.annotate("agreement with observed frequency", (0.27, 0.40), rotation=diag_deg,
                  rotation_mode="anchor", fontsize=6.8, color="#9a9a9a",
                  ha="left", va="bottom")
     fig.savefig(os.path.join(OUT, "calibration.png"))
@@ -276,10 +276,10 @@ def fig_roadmap():
     rows = [
         ("Shortcut", "§2", "an attribute is encoded\nin the features",
          "that the model uses it", "yes"),
-        ("Leakage", "§3", "near-duplicate & group\noverlap across the split",
-         "a clean split when you\ngave no group ids", "yes"),
-        ("Calibration", "§4", "whether scores are\nreal probabilities",
-         "discrimination; verdicts\nunder ~30 clusters", "compose"),
+        ("Leakage", "§3", "candidate pairs & group\noverlap in supplied split",
+         "patient separation in a split\nthat was not supplied", "yes"),
+        ("Calibration", "§4", "agreement with observed\nfrequencies",
+         "discrimination; small\nsubgroup precision", "compose"),
         ("Prevalence", "§5", "PPV at the deployment\nbase rate",
          "what AUROC shows —\nit is prevalence-blind", "compose"),
     ]

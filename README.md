@@ -63,7 +63,7 @@ optional and needs `python -m pip install -e '.[figures]'`.
 | Example | Expected output | How to read it |
 |---|---|---|
 | A: class signal only | Overall AUROC ≈0.841; `AMBIGUOUS` | Overall decodability can arise from correlation with the diagnostic label. |
-| B: same cohort, added mode signal | Overall AUROC ≈0.905; `SHORTCUT ENCODED` | Within-class evidence supports encoded mode information; it does **not** prove the diagnostic classifier used it. |
+| B: same cohort, added mode signal | Overall AUROC ≈0.905; `ATTRIBUTE ENCODED` | Within-class evidence supports encoded mode information; it does **not** prove the diagnostic classifier used it. |
 | C: full audit | Probe and leakage text report | The generated split cannot establish that your original model's training/test split was clean. |
 | D: planted patient overlap | `GROUP LEAKAGE` | The detector must flag the deliberately contaminated split. |
 | Calibration / prevalence | ECE, Brier, reliability bins; PPV ≈0.154 at 1% prevalence | Worked examples of existing metrics and arithmetic, separate from the automated audit. |
@@ -82,14 +82,15 @@ for warnings, exact conventions, and short exercises.
 | Check | Implemented behavior | Limit |
 |---|---|---|
 | Shortcut probe | Fits separate linear attribute probes overall and within each class; group-aware folds and group-cluster bootstrap intervals | Decodability is not evidence that the original classifier relies on that attribute. |
-| Leakage audit | Embedding cosine-similarity flags across splits; exact group overlap when a split is supplied | Similarity needs inspection; an automatically generated split does not assess historical leakage. |
+| Leakage audit | Embedding cosine-similarity candidates across splits; exact group overlap when a split and usable repeated group IDs are supplied | Similarity candidates need inspection; an automatically generated split does not assess historical leakage. |
 
 The original classifier stays frozen; the separate probes are fitted during the
 audit. **Calibration and prevalence are worked examples, not additional CLI
 checks.** `medaudit.metrics` supplies ECE, Brier, reliability curves, AUROC and
 cluster bootstrap. Automatic calibration/prevalence/external audit modules,
 feature extraction, and HTML report generation are not implemented.
-[DESIGN.md](DESIGN.md) includes the broader roadmap.
+[DESIGN.md](DESIGN.md) describes the current input, checks, output, and planned
+modules.
 
 For your own features, see [input format and configuration](tutorial/RUNNING.md#use-your-own-features).
 Keep images, manifests, features, weights, and reports containing private details
@@ -107,8 +108,9 @@ The tests cover metrics, splits, manifests, probes, leakage and report assembly.
 GitHub Actions runs these tests and the synthetic tutorial smoke checks on
 Python 3.9–3.14; it does not download medical data or model weights.
 Passing synthetic tests does not establish performance on medical data.
-See the [local verification record](docs/READER-VERIFICATION.md) for the tested
-versions and scope; the package's supported dependency ranges are not a lockfile.
+See the [reproducibility and scope guide](docs/READER-VERIFICATION.md) for the
+runnable workflow and current scope; the package's supported dependency ranges
+are not a lockfile.
 
 ## Attribution and license
 
@@ -116,7 +118,7 @@ Author: Chao Sheng.
 
 To cite this educational resource, use: Chao Sheng. *From Pixels to Patients:
 a hands-on reliability audit of a medical-image classifier*. MedAudit repository,
-2026. Include the commit you used and an access date; no paper DOI is claimed.
+2026. Include the commit you used and an access date.
 The tutorial's [references](tutorial/from-pixels-to-patients.md#references) credit
 the underlying methods.
 

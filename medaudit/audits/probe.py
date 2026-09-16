@@ -1,14 +1,13 @@
-"""Shortcut probe — the flagship audit.
+"""Linear attribute probe on supplied features.
 
 Question it answers: *does the model's feature representation encode a
 non-diagnostic acquisition/metadata attribute* (imaging mode, scanner, site,
-stain, …)? If it does, the model can exploit that attribute as a shortcut, and
-performance will not transfer when the attribute's correlation with the label
-changes (a new site, a rebalanced cohort).
+stain, …)? Decodability identifies information available in the features.
+It does not establish classifier reliance or predict transfer performance.
 
 Method: a **linear probe** — a ridge classifier trained on frozen features to
 predict the attribute — evaluated **group-aware, out-of-fold** (no
-patient/case spans train and eval). High held-out AUROC means the attribute is
+supplied group spans train and eval). High held-out AUROC means the attribute is
 linearly readable from the features.
 
 Two readings, and the second is the one that matters:
@@ -20,8 +19,8 @@ Two readings, and the second is the one that matters:
   * **within-class** probe — the same probe run *inside each fixed class*.
     Holding the diagnosis constant removes the class-collinearity explanation:
     if the attribute is still decodable here, the features genuinely encode the
-    acquisition attribute beyond what the label explains. This is the strong
-    evidence of a shortcut.
+    acquisition attribute beyond what the fixed class explains. Classifier
+    reliance requires a separate assessment.
 
 No sklearn. The probe is closed-form ridge regression on the class indicator
 (monotonic in the logistic decision value for AUROC purposes), deterministic,
@@ -253,7 +252,7 @@ def _verdict(overall, within):
 
     ``within`` maps class name -> probe dict (has a ``ci``) or a ``{"skipped":…}``
     marker; only entries that actually ran count. Distinguishes: decodable and
-    confirmed within-class (SHORTCUT ENCODED), decodable but class-collinear
+    confirmed within-class (ATTRIBUTE ENCODED), decodable but class-collinear
     (AMBIGUOUS), decodable with no usable within-class check (DECODABLE), a probe
     genuinely near chance (NOT DECODABLE), and a high point estimate whose CI is
     just too wide (NOT ESTABLISHED — underpowered, not truly absent).
@@ -274,7 +273,7 @@ def _verdict(overall, within):
         # verdict therefore requires EVERY evaluable class to clear it; a subset
         # is reported as MIXED, not promoted.
         if hits and len(hits) == len(ran):
-            return ("SHORTCUT ENCODED", _pow(
+            return ("ATTRIBUTE ENCODED", _pow(
                 "the attribute is linearly decodable from the features and remains "
                 f"decodable within every fixed class tested ({', '.join(hits)}) — "
                 "encoded beyond class-collinearity. It is therefore available to "
@@ -369,16 +368,16 @@ def format_report(rep):
         lo, hi = r["ci"]
         # n_groups, not n, is the effective sample size: rows from one patient
         # move together, so 900 images from 20 patients is a study of 20.
-        s = (f"AUROC {r['auroc']:.3f}  (95% CI {lo:.3f}–{hi:.3f}; "
+        s = (f"AUROC {r['auroc']:.3f}  (95% cluster-bootstrap CI within selected partition "
+             f"{lo:.3f}–{hi:.3f}; excludes partition variation; "
              f"{r.get('n_groups', '?')} groups, {r['n']} rows")
         vf = r.get("valid_frac")
         if vf is not None and vf < 0.90:
             s += f"; only {vf:.0%} valid resamples — underpowered"
         s += ")"
         sp = r.get("partition_spread")
-        # Only flag a spread wide enough to change how you'd read the number.
-        # A tighter trigger would cry wolf on ordinary resampling jitter — the
-        # exact false-alarm habit this toolkit is meant to break.
+        # This display threshold is a heuristic for highlighting large partition
+        # variation; it is not an inferential cutoff.
         if sp and (sp[1] - sp[0]) > SPREAD_FLAG:
             s += f"\n{' ' * 17}fold-partition spread {sp[0]:.3f}–{sp[1]:.3f} over " \
                  f"{r.get('n_repeats', '?')} partitions — the verdict is partly a " \
@@ -393,7 +392,7 @@ def format_report(rep):
         return s
 
     lines = [f"shortcut probe · attribute = {rep['attribute']!r}  "
-             f"(positive if CI lower bound > {MARGIN:.2f}; point = median over "
+             f"(heuristic margin: CI lower bound > {MARGIN:.2f}; point = median over "
              f"fold partitions)",
              f"  overall        {fmt(rep['overall'])}"]
     for cname, r in rep["within_class"].items():
